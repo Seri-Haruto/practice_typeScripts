@@ -1,30 +1,37 @@
-type HasName = {
-    name: string;
-};
-
 class Person {
-    name: string;
 
-    constructor(initName: string) {
-        this.name = initName;
+    readonly id: number = 16;
+    constructor(
+        public readonly name: string, 
+        protected age: number
+    ) {
+        this.id = Math.floor(Math.random() * 100);
+        this.name = 'serizawa';
     }
 
-    // `this` は実行時の引数ではなく、呼び出し元に必要な形を示すTypeScript専用の指定。
-    greeting(this: HasName): void {
-        console.log(`Hello! My name is ${this.name}`);
+    incrementAge() {
+        this.age += 1;
+    }
+    greeting(this: Person){
+        console.log(`Hello! My name is ${this.name} and I am ${this.age} years old.`);
     }
 }
 
-const haruto = new Person('Haruto');
+class Teacher extends Person {
+    constructor(name: string, age: number, private subject: string) {
+        super(name, age);
+    }
+
+    greeting(this: Teacher) {
+        console.log(`Hello! My name is ${this.name}, I am ${this.age} years old and I teach ${this.subject}.`);
+    }
+} 
+
+const haruto = new Person('Haruto', 20);
 haruto.greeting(); // this === haruto
 
-const anotherHaruto = {
-    name: 'Another Haruto',
-    anotherGreeting: haruto.greeting,
-};
+const anotherHaruto = new Person('Another Haruto', 25);
+anotherHaruto.greeting(); // Hello! My name is Another Haruto
 
-// ドットの左側にあるanotherHarutoが、greeting内のthisになる。
-anotherHaruto.anotherGreeting(); // Hello! My name is Another Haruto
-
-// const detachedGreeting = haruto.greeting;
-// detachedGreeting(); // エラー: thisとして使える呼び出し元がない
+const teacher = new Teacher('Jack', 21, 'Math');
+teacher.greeting();

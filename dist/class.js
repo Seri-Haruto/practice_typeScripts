@@ -2,21 +2,34 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 class Person {
     name;
-    constructor(initName) {
-        this.name = initName;
+    age;
+    id = 16;
+    constructor(name, age) {
+        this.name = name;
+        this.age = age;
+        this.id = Math.floor(Math.random() * 100);
+        this.name = 'serizawa';
     }
-    // `this` は実行時の引数ではなく、呼び出し元に必要な形を示すTypeScript専用の指定。
+    incrementAge() {
+        this.age += 1;
+    }
     greeting() {
-        console.log(`Hello! My name is ${this.name}`);
+        console.log(`Hello! My name is ${this.name} and I am ${this.age} years old.`);
     }
 }
-const haruto = new Person('Haruto');
+class Teacher extends Person {
+    subject;
+    constructor(name, age, subject) {
+        super(name, age);
+        this.subject = subject;
+    }
+    greeting() {
+        console.log(`Hello! My name is ${this.name}, I am ${this.age} years old and I teach ${this.subject}.`);
+    }
+}
+const haruto = new Person('Haruto', 20);
 haruto.greeting(); // this === haruto
-const anotherHaruto = {
-    name: 'Another Haruto',
-    anotherGreeting: haruto.greeting,
-};
-// ドットの左側にあるanotherHarutoが、greeting内のthisになる。
-anotherHaruto.anotherGreeting(); // Hello! My name is Another Haruto
-// const detachedGreeting = haruto.greeting;
-// detachedGreeting(); // エラー: thisとして使える呼び出し元がない
+const anotherHaruto = new Person('Another Haruto', 25);
+anotherHaruto.greeting(); // Hello! My name is Another Haruto
+const teacher = new Teacher('Jack', 21, 'Math');
+teacher.greeting();

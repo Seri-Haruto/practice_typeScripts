@@ -1,0 +1,716 @@
+はい。ここからの再解析はかなり重要です。今あるノートの方向性は良いのですが、**3つの分析を独立にやるのではなく、「モデルの性質 → 人間がそれをどう理解したか → その結果どう行動を変えたか」まで一本につなげる**と、HAI研究として一段強くなります。
+
+現在すでに、Rule-BasedではPre/Post誤差の大きな改善、RFでも小さいながら改善が確認され、特にRuleではArousal・Valenceの両軸で適応が出ています。 一方、単純な試行間変化量では条件差が出ていません。
+なので次は、単に「差があったか」を増やすのではなく、**「人間は何を学習し、どの方向へ、どの特徴を変えたのか」**を明らかにする再解析が重要です。
+
+---
+
+# まず研究全体をこう整理したい
+
+3つの分析を、私は次の関係として扱うのがよいと思います。
+
+**① Estimator / Agent側の性質**
+「そもそも、このエージェントはどんな入力にどう反応するシステムだったのか」
+
+↓
+
+**② Human behavioral adaptation**
+「人間はそのresponse tendencyを学習し、実際にその方向へ行動を変えたのか」
+
+↓
+
+**③ Human interpretation / impression**
+「その適応は、本人の理解・予測・行動変容意図・システム印象とどう関係していたのか」
+
+最終的には、
+
+> **Agent mapping → Human mental model → Behavioral adaptation**
+
+というメカニズムを説明できる状態を目標にします。
+
+これは現在のHAI論文で提示している「behavior–response contingencyを学習して適応したのではないか」という議論を、実データでさらに踏み込んで検証する方向です。
+
+---
+
+# 今後の解析ロードマップ
+
+| 領域          | 最初にやる解析                   | 次にやる深掘り                       | 最終的に答えたい問い                 |
+| ----------- | ------------------------- | ----------------------------- | -------------------------- |
+| **① 推定モデル** | RF/RB/DL性能を同一条件で再評価       | 特徴量重要度・誤差構造・予測規則の複雑性          | 人間にとって「学習しやすいモデル」とは何か      |
+| **② 行動変容**  | 既存Pre/Post結果を完全再現         | 適応方向・特徴量変化・trial-by-trial更新   | 人間は具体的に何をどう変えたのか           |
+| **③ 印象・解釈** | GodSpeed/fit/intention再解析 | 自由記述・mental model・行動との対応      | 理解した人ほど本当に適応したのか           |
+| **統合解析**    | participant単位で全指標結合       | model→interpretation→behavior | human-side adaptationの成立機序 |
+
+---
+
+# ① 推定モデルに関する調査
+
+ここは「より高精度なモデルを作る」だけにしない方がいいです。
+
+今回の研究では、**推定精度とhuman adaptationが必ずしも同じものではない**からです。
+
+RFはArousal R²=.134、Valence R²=.091と限定的です。
+DLもuser-holdoutでは概ねR²=.10〜.15程度で、劇的な性能向上には至っていません。
+
+それなのに、人間側適応は生じています。
+
+ここがむしろ面白い。
+
+## A. まず「公平なモデル比較」を作る
+
+RFとDLで現在評価方法が違います。
+
+RFレポート：**within-user split**
+DLレポート：**user-holdout**
+
+なので、現在の数値は直接比較できません。
+
+ここは全モデルを、
+
+**同じ参加者 → 同じtrain/test split → 同じmetric**
+
+に統一します。
+
+最低限、
+
+* MAE
+* RMSE
+* R²
+* Pearson r
+
+を計算。
+
+値は内部では**丸めずfloatのまま計算**し、表にするときだけ小数3桁程度にします。
+
+さらにモデル間比較は「RF R²=.14、DL=.15だからDLの勝ち」とするのではなく、**同じtest participantsに対するparticipant bootstrapで95% CI**を出した方がよいです。
+
+---
+
+## B. 「どこで外すのか」を見る
+
+平均MAEだけでは足りません。
+
+特に今回のモデルは極端な−10/+10を中央に寄せる可能性があります。
+
+なので、
+
+**true A/Vごとのerror**
+
+を出します。
+
+たとえば、
+
+* −10
+* −5
+* 0
+* +5
+* +10
+
+ごとのMAE。
+
+ここで、
+
+> 「極端な感情ほど中央方向に縮小される」
+
+という現象があれば、A-1の人間側適応にも影響する可能性があります。
+
+---
+
+# C. 特徴量重要度
+
+ノートに書いてあるここはぜひやりたいです。
+
+Arousalでは既に大きさ・速度・運動特徴が比較的重要で、Valenceでは円形度・丸さ・歪みなどの形状特徴が関係しています。
+
+ただし、単純なRF feature importanceだけではなく、
+
+**Permutation Importance + SHAP**
+
+くらいまで行きたいです。
+
+そして最終的に、
+
+**Arousal**
+→ speed / size / movement
+
+**Valence**
+→ shape / roundness / closure
+
+というような「モデルの判断規則」を人間が理解できる形に整理します。
+
+これは後の自由記述分析とつながります。
+
+---
+
+# D. Rule-Basedモデルも同じくらい詳しく解析する
+
+ここは意外と重要です。
+
+「Rule-Basedのルールを文章で説明する」だけではなく、
+
+> **どの特徴量をどちらへ動かすとA/Vがどう変わるか**
+
+を完全に表にします。
+
+つまり、
+
+**drawing feature → predicted A/V**
+
+というmappingを明示します。
+
+そうすると、
+
+> 「RBはRFよりAccuracyが高かったのか？」
+
+ではなく、
+
+> **「RBは人間が学習できるmappingだったのか？」**
+
+を議論できるようになります。
+
+---
+
+# ② 行動変容解析
+
+ここが今回一番深掘りする価値があります。
+
+既存分析では、
+
+**Post error − Pre error**
+
+を中心に見ています。
+
+これは「最終的に近づいたか」を見るには非常に良い。
+
+ただし、
+
+> **どの方向に人間が動いたのか**
+
+は分かりません。
+
+ノートで書いている「ベクトル解析」は非常に良い方向です。
+
+---
+
+# A. 「適応ベクトル」を作る
+
+これはぜひ導入したいです。
+
+あるターゲットを
+
+[
+T=(A_t,V_t)
+]
+
+PreTestでのモデル推定を
+
+[
+P_{pre}=(A_{pre},V_{pre})
+]
+
+PostTestを
+
+[
+P_{post}=(A_{post},V_{post})
+]
+
+とします。
+
+人間が本来動くべき「理想方向」は、
+
+[
+C=T-P_{pre}
+]
+
+です。
+
+実際に動いた方向は、
+
+[
+M=P_{post}-P_{pre}
+]
+
+です。
+
+ここから非常に重要な指標を作れます。
+
+### Directional adaptation
+
+[
+\cos\theta=
+\frac{M\cdot C}
+{|M||C|}
+]
+
+これなら、
+
+**+1**：完全に正しい方向
+**0**：関係ない方向
+**−1**：真逆へ変化
+
+になります。
+
+これこそ、ノートで書いている
+
+> 「5→7に変化しても絶対誤差だけでは適応の意味が曖昧」
+
+という問題をかなり綺麗に解決します。
+
+---
+
+# B. 「どれくらい理想方向に進んだか」
+
+さらに、
+
+[
+AdaptationRatio=
+\frac{M\cdot C}
+{|C|^2}
+]
+
+も有用です。
+
+解釈は、
+
+**0**
+→ 全く進んでいない
+
+**0.5**
+→ initial errorの約半分だけ正しい方向へ進んだ
+
+**1**
+→ 理想位置まで到達
+
+**>1**
+→ overshoot
+
+**<0**
+→ 逆方向
+
+となります。
+
+私は今回、単純なΔerrorに加えて、
+
+**Directional Adaptation Score**
+
+を主要な追加指標にする価値がかなり高いと思います。
+
+---
+
+# C. 「どの描画特徴を変えたのか」
+
+これが次です。
+
+今までは50特徴ほどをまとめて、
+
+> overall change
+
+にしていました。
+
+これでは適応の中身が消えています。
+
+そこで例えば、
+
+**mean_speed**
+**outer_radius**
+**roundness**
+**circularity**
+**closure_ratio**
+**duration**
+**speed_std**
+**curvature**
+
+などについて、
+
+[
+Feature_{post}-Feature_{pre}
+]
+
+を計算します。
+
+ただし50個全部にt検定をすると多重比較地獄になるので、
+
+**モデル上意味のある特徴を事前選択**
+＋
+**FDR補正**
+
+がよいです。
+
+もっと面白いのは、
+
+> **モデルが重要視していた特徴を、人間も実際に変えたのか**
+
+を見ることです。
+
+例えばRBが
+
+**speed↑ → Arousal↑**
+
+というルールなら、
+
+高Arousalに合わせようとした参加者がPostでspeedを上げているか。
+
+これはかなり強いhuman adaptationの証拠になります。
+
+---
+
+# D. Free-drawing 20 trialは「学習過程」として使う
+
+平均変化量だけでは条件差が出ませんでした。
+
+でもこれは、
+
+> 「何も起きていない」
+
+とは限りません。
+
+むしろ、
+
+**探索 → 規則発見 → 安定化**
+
+だった可能性があります。
+
+なのでtrial 1〜20を、
+
+**early**
+1–5
+
+**middle**
+6–15
+
+**late**
+16–20
+
+くらいに分けて、
+
+特徴量varianceや変化量を調べる価値があります。
+
+想定としては、
+
+RBなら
+
+**序盤：探索**
+↓
+**規則を発見**
+↓
+**終盤：収束**
+
+ということが起こる可能性があります。
+
+単純な平均試行間変化量だと、この構造は完全に消えます。
+
+---
+
+# E. thinking / drawing / feedback-view time
+
+ここもノートの着眼点は良いです。
+
+ただ、
+
+**「条件平均が違うか」**
+
+だけを見るのは弱いと思います。
+
+見るべきなのは
+
+[
+Condition \times Trial
+]
+
+です。
+
+例えば仮説として、
+
+RBでは最初、
+
+> 「このAI何見てるんだろう？」
+
+と考えるのでthinking timeが長い。
+
+しかしルールを学ぶと、
+
+> 「速く描けばこうなる」
+
+と分かるため、
+
+**thinking timeが徐々に短くなる**
+
+可能性があります。
+
+だからmixed-effect modelで、
+
+[
+Time \sim Condition * Trial + (1|Participant)
+]
+
+を見る方が面白いです。
+
+feedback view timeも同様です。
+
+---
+
+# clear_count / undo_count
+
+これは既存結果から見ても主解析から外してよいと思います。
+
+Undoは全条件0でした。
+
+したがって、
+
+**descriptive only**
+
+にして、主要仮説には使わない。
+
+---
+
+# ③ 印象・主観評価
+
+ここは単純な条件比較だけだともう限界があります。
+
+GodSpeedに条件差がないこと自体は既に十分分かっています。
+
+なので今後は、
+
+> **主観評価がhuman adaptationを説明するか**
+
+へ移ります。
+
+---
+
+# A. Behavior Change Intention × 実際の行動
+
+これはぜひやります。
+
+participant単位で、
+
+**Behavior change intention**
+vs
+**Directional Adaptation**
+vs
+**Pre/Post error improvement**
+
+を見る。
+
+単なるSpearmanだけでなく、
+
+[
+Adaptation =
+\beta_0+
+\beta_1 Intention+
+\beta_2 Condition+
+\beta_3 PreError
+]
+
+くらいの回帰を行います。
+
+つまり、
+
+> 「自分では変えようと思った人が、本当に変わったのか？」
+
+です。
+
+これはHAI的にも面白い問いです。
+
+---
+
+# B. Feedback Fit × 行動変容
+
+同様に、
+
+> 「FBが合っていると思った人ほど適応したのか？」
+
+を見る。
+
+ここで重要なのは、既存結果ではFeedback fitと単純な試行間変化量にはむしろ負の相関が出ています。
+
+なので、
+
+**「納得したからたくさん行動を変える」**
+
+とは限りません。
+
+むしろ、
+
+> Fitが高い人は最初から大きく探索する必要がなかった
+
+可能性もあります。
+
+ここは非常に面白いです。
+
+---
+
+# C. 自由記述を本格的に分析する
+
+私はこれがかなり重要だと思っています。
+
+現在はキーワードレベルなので、
+人手でカテゴリ化します。
+
+例えばF1を、
+
+**Size rule**
+**Speed rule**
+**Shape rule**
+**Closure rule**
+**Position rule**
+**No rule detected**
+**Incorrect rule**
+
+などに分類。
+
+F2は、
+
+**Changed size**
+**Changed speed**
+**Changed shape**
+**Changed position**
+**No strategy**
+
+など。
+
+2名以上のcoderで分類して、
+
+**Cohen's κ**
+
+を出す。
+
+---
+
+# ここからさらに面白い分析ができます
+
+参加者が言った規則と、
+
+**実際のRB/RFの判断規則**
+
+を比較します。
+
+するとparticipantごとに、
+
+# Mental Model Accuracy
+
+を作れる可能性があります。
+
+例えばRBが、
+
+> 大きい + 速い → Arousal高
+
+なのに、
+
+参加者が
+
+> 「大きさと速度を見ていると思った」
+
+なら高得点。
+
+逆に、
+
+> 「位置だけ見ていると思った」
+
+なら低得点。
+
+その上で、
+
+[
+MentalModelAccuracy
+\rightarrow
+BehavioralAdaptation
+]
+
+を調べる。
+
+これが出たら非常に強いです。
+
+---
+
+# 最終的に一番やりたい統合解析
+
+この研究で最終的に目指したいモデルは、
+
+**Condition**
+↓
+**Rule understanding / Predictability**
+↓
+**Behavior change intention**
+↓
+**Actual behavioral adaptation**
+
+です。
+
+ただし現在は「Predictability」を直接質問していません。
+
+したがって今のA-1データだけでは因果的mediationとは言わず、
+
+**exploratory mechanism analysis**
+
+として扱います。
+
+その代わり、
+
+* 自由記述のrule understanding
+* Feedback fit
+* Behavior change intention
+* Directional adaptation
+* Pre/Post improvement
+
+をつなげる。
+
+---
+
+# 私なら、実際の再解析はこの順番で進めます
+
+**Step 0**
+293名の最終A-1 DBを確定して、除外基準・条件割付・Random splitを完全固定。
+
+**Step 1**
+現在のHAI論文の結果をDBから完全再現。
+
+ここで、
+
+RF −0.578
+RB −1.523
+
+などが完全に再現されることを確認します。
+
+**Step 2**
+RF / DL / Ruleのmappingを解析。
+
+**Step 3**
+新しい **Directional Adaptation Score** を作る。
+
+**Step 4**
+どのdrawing featuresが適応したかを見る。
+
+**Step 5**
+20 trialのlearning dynamicsをmixed modelで解析。
+
+**Step 6**
+主観評価＋自由記述を再解析。
+
+**Step 7**
+Mental Model Accuracyとbehavioral adaptationを統合する。
+
+---
+
+## この再解析の「本当のゴール」
+
+今の論文は、
+
+> **Humans adapted to the agent.**
+
+まで示しています。
+
+再解析後には、もう一段進めて、
+
+> **Humans learned specific response tendencies of the agent and selectively modified behavior along dimensions relevant to those tendencies.**
+
+まで言える可能性があります。
+
+さらにRule-Basedでそれが特に強ければ、
+
+> **Human-side adaptation depends not merely on feedback contingency, but on the learnability of the agent's response mapping.**
+
+という次の研究仮説につながります。
+
+ここまで持っていけると、Phase 2で検証すべき「Predictability / Learnability」の定義がかなり明確になります。
+
+次はまず**①推定モデル解析を具体的な分析項目・統計手法・出力図まで完全な分析計画に落とす**のが一番きれいです。そのあと②行動変容→③印象分析の順に固めると、かなり整理された再解析プロジェクトになります。
