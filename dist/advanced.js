@@ -1,5 +1,5 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+var _a, _b;
 const serizawa = {
     name: 'serizawa',
     role: 'front-end',
@@ -22,13 +22,17 @@ function describeProfile(nomadWorker) {
     }
 }
 class Dog {
-    kind = 'dog';
+    constructor() {
+        this.kind = 'dog';
+    }
     speak() {
         console.log('bow-wow');
     }
 }
 class Bird {
-    kind = 'bird';
+    constructor() {
+        this.kind = 'bird';
+    }
     speak() {
         console.log('tweet-tweet');
     }
@@ -58,4 +62,4 @@ const designer = {
 const downloadedData = {
     id: 1,
 };
-console.log(downloadedData.user?.name?.first); // optional chainingを使って、downloadedData.userがundefinedの場合はundefinedを返す
+console.log((_b = (_a = downloadedData.user) === null || _a === void 0 ? void 0 : _a.name) === null || _b === void 0 ? void 0 : _b.first); // optional chainingを使って、downloadedData.userがundefinedの場合はundefinedを返す

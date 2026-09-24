@@ -1,12 +1,9 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 class Person {
-    name;
-    age;
-    id = 16;
     constructor(name, age) {
         this.name = name;
         this.age = age;
+        this.id = 16;
         this.id = Math.floor(Math.random() * 100);
         this.name = 'serizawa';
     }
@@ -18,7 +15,6 @@ class Person {
     }
 }
 class Teacher extends Person {
-    subject;
     constructor(name, age, subject) {
         super(name, age);
         this.subject = subject;

@@ -1,12 +1,13 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 function copy(value, key) {
     value[key];
     return value;
 }
 console.log(copy({ name: 'haruto', age: 12 }, 'name'));
 class LightDatabase {
-    data = [];
+    constructor() {
+        this.data = [];
+    }
     add(item) {
         this.data.push(item);
     }
