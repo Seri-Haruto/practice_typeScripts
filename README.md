@@ -4,9 +4,9 @@
 
 このフォルダのコードで学ぶ技術を整理した復習用ガイド。詳細は各ファイルのコメントへ。
 
-## 🗺️ ファイル別・何ができるようになる？
+## 学習目的
 
-| ファイル | 学ぶこと | できるようになること |
+| ファイル | 学ぶんだこと | できるようになること |
 |---|---|---|
 | [class.ts](src/class.ts) | **データと処理をまとめる** | 人物の名前・年齢・挨拶をクラスで管理する |
 | [interface.ts](src/interface.ts) | **必要な項目・型を決める** | クラスや関数に必要な条件を型でチェックする |
@@ -15,18 +15,18 @@
 | [decorator.ts](src/decorator.ts) | **クラスなどに処理を追加する** | ログ出力・HTML表示・メソッドの設定変更を付け加える |
 | [food-app.ts](src/food-app.ts) | **学んだ技術で画面を動かす** | 食品の選択 → 点数集計 → 表示更新を実装する |
 
-**復習の道順**
+**実施した順序**
 
 ```text
 class → interface → advanced → generics → decorator
   └ クラスと型の知識を使って、food-appで画面操作・集計を実践
 ```
 
-## 🧰 技術一覧
+## 技術一覧
 
 ### ① class.ts — オブジェクトの作成と継承
 
-| 技術・記法 | 意味 | このコードでの使い方 |
+| 技術・記法 | 意味 | 使い方 |
 |---|---|---|
 | `class` / `new` | 設計図 / 実物の作成 | `Person`から人物を作る |
 | `constructor` / `this` | 作成時の処理 / 自分自身 | 名前・年齢を自分に保存する |
@@ -100,7 +100,7 @@ class → interface → advanced → generics → decorator
 | `textContent` | 要素の表示文字 | 合計点で画面を書き換える |
 | 要素の後ろの`!` | nullでないと型検査へ伝える | スコア表示先がある前提で操作する |
 
-## 🥗 アプリで技術がどうつながる？
+## アプリ概要
 
 **Food＝1枚の操作 ／ Foods＝一覧から抽出 ／ Score＝合計と表示**
 
@@ -124,19 +124,7 @@ Food.clickEventHandler()
 
 食品・点数はHTMLに定義。選択状態はCSSクラスで保持し、再読み込みでリセット。日付別の記録・サーバー通信・永続保存は未実装。
 
-## 📁 周辺ファイル
-
-| ファイル | 役割・復習できる内容 |
-|---|---|
-| [index.html](index.html) | 食品名・点数・表示先の構造。`defer`でHTML解析後にJSを実行 |
-| [style.css](style.css) | Flexboxによる配置、カードの装飾、選択時の見た目 |
-| [tsconfig.json](tsconfig.json) | `src` → `dist`の変換設定、`strict`による型検査 |
-| [dist/](dist/) | ブラウザで実行するJavaScript。現在のHTMLは`food-app.js`だけを読み込む |
-| [dist/index.js](dist/index.js) | 基礎学習の記録：変数・配列・関数・コールバック・例外。コメントにはタプル・列挙型・`any`・`unknown`の学習跡もある。元の`src/index.ts`は現存しない |
-| [memo.txt](memo.txt) | クラス・インスタンス・オブジェクト指向のメモ |
-| [src/a.txt](src/a.txt) | 別テーマの研究メモ。アプリでは使用しない |
-
-## 🔎 復習で区別したいこと
+## メモ - 注意
 
 | 混同しやすいもの | 違い |
 |---|---|
@@ -144,14 +132,3 @@ Food.clickEventHandler()
 | `implements` ↔ `extends` | `implements`は条件の検査。クラスの`extends`は実装の継承 |
 | `get totalScore()` ↔ `render()` | 前者は`.totalScore`で実行。後者は`.render()`で実行 |
 | `Foods` ↔ `foods` | 前者はクラス名。後者は取得したオブジェクトを持つ変数名 |
-
-## ▶️ アプリの確認
-
-TypeScriptの`tsc`が使える環境で、フォルダ直下から実行。
-
-```sh
-tsc -p tsconfig.json            # srcのTS → distのJS
-tsc --noEmit -p tsconfig.json   # 型チェックだけ
-```
-
-[index.html](index.html)をブラウザで開く → 食品をクリック → 選択状態と合計点の変化を確認。
