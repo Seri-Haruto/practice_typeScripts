@@ -1,4 +1,4 @@
-# TypeScript 学習マップ
+# TypeScript の勉強
 
 **JavaScriptで動かす力 ＋ TypeScriptで型を扱う力 → 食品スコアアプリへ応用。**
 
